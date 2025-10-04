@@ -1,0 +1,70 @@
+/* Backend Status Styles */
+.backend-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+.status-indicator.connected .status-dot {
+  background: #10b981;
+}
+
+.status-indicator.disconnected .status-dot {
+  background: #ef4444;
+}
+
+.status-text {
+  font-weight: 500;
+  color: #374151;
+}
+
+.status-indicator.connected .status-text {
+  color: #059669;
+}
+
+.status-indicator.disconnected .status-text {
+  color: #dc2626;
+}
+
+.retry-button {
+  padding: 4px 8px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.retry-button:hover {
+  background: #2563eb;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}

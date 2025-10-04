@@ -1,0 +1,251 @@
+/* Task Sidebar Styles */
+.task-sidebar {
+  width: 320px;
+  height: 100%;
+  background: white;
+  border-left: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.task-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.task-sidebar-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.refresh-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: #f3f4f6;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-size: 14px;
+}
+
+.refresh-btn:hover {
+  background: #e5e7eb;
+}
+
+.task-sidebar-tabs {
+  display: flex;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.tab-button {
+  flex: 1;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+  transition: all 0.2s ease;
+  border-bottom: 2px solid transparent;
+}
+
+.tab-button:hover {
+  background: #f9fafb;
+  color: #374151;
+}
+
+.tab-button.active {
+  color: #667eea;
+  border-bottom-color: #667eea;
+  background: #f9fafb;
+}
+
+.task-sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.task-sidebar-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: #6b7280;
+}
+
+.loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 12px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.task-sidebar-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  color: #6b7280;
+}
+
+.empty-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+}
+
+.task-sidebar-empty p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.task-sidebar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.task-sidebar-item {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.task-sidebar-item:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.task-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.task-priority-indicator {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.task-status {
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.task-item-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.task-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1f2937;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.task-due-date {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.task-due-date.overdue {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.task-due-date.due-soon {
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+.task-sidebar-footer {
+  padding: 16px 20px;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.view-all-btn {
+  width: 100%;
+  padding: 10px 16px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.view-all-btn:hover {
+  background: #5a67d8;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .task-sidebar {
+    width: 280px;
+  }
+}
+
+@media (max-width: 768px) {
+  .task-sidebar {
+    width: 100%;
+    height: 50vh;
+    border-left: none;
+    border-top: 1px solid #e5e7eb;
+  }
+  
+  .task-sidebar-content {
+    padding: 12px;
+  }
+  
+  .task-sidebar-item {
+    padding: 10px;
+  }
+  
+  .task-title {
+    font-size: 13px;
+  }
+}

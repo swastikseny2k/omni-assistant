@@ -1,0 +1,238 @@
+/* Chat Page Styles */
+.chat-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f9fafb;
+}
+
+.chat-page-header {
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;
+  z-index: 100;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  max-width: none;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.sidebar-toggle-mobile {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: #f3f4f6;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.sidebar-toggle-mobile:hover {
+  background: #e5e7eb;
+}
+
+.sidebar-toggle-mobile svg {
+  width: 18px;
+  height: 18px;
+  color: #6b7280;
+}
+
+.app-title {
+  font-size: 20px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.nav-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  text-decoration: none;
+}
+
+.nav-button:hover {
+  background: #5a67d8;
+}
+
+.nav-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.tasks-nav-button {
+  background: #10b981;
+}
+
+.tasks-nav-button:hover {
+  background: #059669;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.user-name {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 14px;
+}
+
+.user-email {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #e5e7eb;
+}
+
+.logout-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.logout-button:hover {
+  background: #dc2626;
+}
+
+.logout-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.chat-page-content {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+/* Ensure proper layout with task sidebar */
+.chat-page-content > * {
+  flex-shrink: 0;
+}
+
+.chat-page-content > .chat-interface {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .sidebar-toggle-mobile {
+    display: flex;
+  }
+  
+  .header-content {
+    padding: 8px 16px;
+  }
+  
+  .app-title {
+    font-size: 18px;
+  }
+  
+  .nav-button span {
+    display: none;
+  }
+  
+  .nav-button {
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+  
+  .nav-button svg {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .user-details {
+    display: none;
+  }
+  
+  .logout-button {
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+  
+  .logout-button span {
+    display: none;
+  }
+  
+  .logout-button svg {
+    width: 18px;
+    height: 18px;
+  }
+  
+  /* Hide task sidebar on mobile, show as overlay */
+  .task-sidebar {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-content {
+    padding: 6px 12px;
+  }
+  
+  .app-title {
+    font-size: 16px;
+  }
+  
+  .user-avatar {
+    width: 28px;
+    height: 28px;
+  }
+}
