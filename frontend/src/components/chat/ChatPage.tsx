@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { ChatProvider } from '../../contexts/ChatContext';
+import { useMobileRedirect } from '../../hooks/useMobileRedirect';
 import ChatSidebar from './ChatSidebar';
 import ChatInterface from './ChatInterface';
 import TaskSidebar from './TaskSidebar';
@@ -12,6 +13,34 @@ const ChatPageContent: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  
+  // Mobile redirect hook
+  const {
+    deviceType,
+    userPreference,
+    isRedirecting,
+    shouldUseMobile,
+    setUserPreference,
+    redirectToMobile,
+    redirectToDesktop
+  } = useMobileRedirect({
+    mobilePath: '/mobile-chat',
+    desktopPath: '/chat',
+    enableAutoRedirect: true,
+    enableUserPreference: true
+  });
+
+  // Show loading while redirecting
+  if (isRedirecting) {
+    return (
+      <div className="redirect-loading">
+        <div className="loading-spinner">
+          <div className="spinner"></div>
+        </div>
+        <p>Redirecting to {shouldUseMobile ? 'mobile' : 'desktop'} view...</p>
+      </div>
+    );
+  }
 
   const handleToggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -67,6 +96,15 @@ const ChatPageContent: React.FC = () => {
               >
                 📋 Tasks
               </button>
+              {deviceType === 'desktop' && (
+                <button 
+                  onClick={redirectToMobile}
+                  className="nav-button mobile-toggle-button"
+                  title="Switch to mobile view"
+                >
+                  📱 Mobile
+                </button>
+              )}
               <button 
                 onClick={handleLogout} 
                 className="nav-button logout-button"

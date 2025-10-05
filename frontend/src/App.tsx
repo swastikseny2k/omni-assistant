@@ -5,8 +5,8 @@ import { TaskProvider } from './contexts/TaskContext';
 import AuthContainer from './components/AuthContainer';
 import Dashboard from './components/Dashboard';
 import ChatPage from './components/chat/ChatPage';
+import MobileChatPage from './components/chat/MobileChatPage';
 import TaskDashboard from './components/task/TaskDashboard';
-import ErrorBoundary from './components/ErrorBoundary';
 import './App.css';
 
 // Protected Route Component
@@ -90,7 +90,19 @@ const AppContent: React.FC = () => {
             path="/chat" 
             element={
               <ProtectedRoute>
-                <ChatPage />
+                <TaskProvider>
+                  <ChatPage />
+                </TaskProvider>
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/mobile-chat" 
+            element={
+              <ProtectedRoute>
+                <TaskProvider>
+                  <MobileChatPage />
+                </TaskProvider>
               </ProtectedRoute>
             } 
           />
@@ -98,9 +110,9 @@ const AppContent: React.FC = () => {
             path="/tasks" 
             element={
               <ProtectedRoute>
-                <ErrorBoundary>
+                <TaskProvider>
                   <TaskDashboard />
-                </ErrorBoundary>
+                </TaskProvider>
               </ProtectedRoute>
             } 
           />
@@ -119,13 +131,9 @@ const AppContent: React.FC = () => {
 // Main App Component
 const App: React.FC = () => {
   return (
-    <ErrorBoundary>
-      <AuthProvider>
-        <TaskProvider>
-          <AppContent />
-        </TaskProvider>
-      </AuthProvider>
-    </ErrorBoundary>
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 };
 

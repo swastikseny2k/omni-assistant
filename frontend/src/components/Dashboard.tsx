@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { shouldUseMobileChat } from '../utils/mobileDetection';
 import './Dashboard.css';
 
 const Dashboard: React.FC = () => {
@@ -22,6 +23,27 @@ const Dashboard: React.FC = () => {
   const handleNavigateToTasks = () => {
     navigate('/tasks');
   };
+
+  const handleNavigateToMobileChat = () => {
+    navigate('/mobile-chat');
+  };
+
+  // Auto-redirect mobile users to mobile chat
+  useEffect(() => {
+    const handleChatNavigation = (e: Event) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('[data-chat-nav]')) {
+        const isMobile = shouldUseMobileChat();
+        if (isMobile) {
+          e.preventDefault();
+          navigate('/mobile-chat');
+        }
+      }
+    };
+
+    document.addEventListener('click', handleChatNavigation);
+    return () => document.removeEventListener('click', handleChatNavigation);
+  }, [navigate]);
 
   return (
     <div className="dashboard-container">
@@ -54,7 +76,7 @@ const Dashboard: React.FC = () => {
         </div>
 
         <div className="features-grid">
-          <div className="feature-card clickable" onClick={handleNavigateToChat}>
+          <div className="feature-card clickable" onClick={handleNavigateToChat} data-chat-nav>
             <div className="feature-icon">💬</div>
             <h3>AI Chat</h3>
             <p>Chat with AI assistants powered by OpenAI and DeepSeek models</p>
@@ -66,6 +88,13 @@ const Dashboard: React.FC = () => {
             <h3>Task Management</h3>
             <p>Create, organize, and track your tasks with intelligent features</p>
             <div className="feature-action">Manage Tasks →</div>
+          </div>
+
+          <div className="feature-card clickable" onClick={handleNavigateToMobileChat}>
+            <div className="feature-icon">📱</div>
+            <h3>Mobile Chat</h3>
+            <p>Optimized mobile experience for quick conversations and task management</p>
+            <div className="feature-action">Mobile Chat →</div>
           </div>
 
           <div className="feature-card">
