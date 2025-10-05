@@ -137,15 +137,18 @@ public class TaskController {
     @GetMapping
     public ResponseEntity<List<Task>> getTasks(Authentication authentication) {
         try {
+            log.debug("Getting tasks for authentication: {}", authentication != null ? authentication.getClass().getSimpleName() : "null");
             User user = getCurrentUser(authentication);
             if (user == null) {
+                log.warn("No user found in authentication context");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
+            log.debug("Getting tasks for user: {}", user.getEmail());
             List<Task> tasks = taskService.getTasksByOwner(user);
             return ResponseEntity.ok(tasks);
         } catch (Exception e) {
-            log.error("get tasks error", e);
-            return ResponseEntity.badRequest().build();
+            log.error("Error getting tasks", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
     
@@ -379,12 +382,16 @@ public class TaskController {
     
     // Get overdue tasks
     @GetMapping("/overdue")
-    public ResponseEntity<List<Task>> getOverdueTasks(@AuthenticationPrincipal OAuth2User principal) {
+    public ResponseEntity<List<Task>> getOverdueTasks(Authentication authentication) {
         try {
-            User user = userService.getOrCreateUser(principal);
+            User user = getCurrentUser(authentication);
+            if (user == null) {
+                return ResponseEntity.badRequest().build();
+            }
             List<Task> tasks = taskService.getOverdueTasks(user);
             return ResponseEntity.ok(tasks);
         } catch (Exception e) {
+            log.error("Error getting overdue tasks", e);
             return ResponseEntity.badRequest().build();
         }
     }
@@ -392,12 +399,16 @@ public class TaskController {
     // Get tasks due soon
     @GetMapping("/due-soon")
     public ResponseEntity<List<Task>> getTasksDueSoon(@RequestParam(defaultValue = "24") int hours,
-                                                     @AuthenticationPrincipal OAuth2User principal) {
+                                                     Authentication authentication) {
         try {
-            User user = userService.getOrCreateUser(principal);
+            User user = getCurrentUser(authentication);
+            if (user == null) {
+                return ResponseEntity.badRequest().build();
+            }
             List<Task> tasks = taskService.getTasksDueSoon(user, hours);
             return ResponseEntity.ok(tasks);
         } catch (Exception e) {
+            log.error("Error getting tasks due soon", e);
             return ResponseEntity.badRequest().build();
         }
     }
@@ -437,12 +448,17 @@ public class TaskController {
     
     // Get task statistics
     @GetMapping("/statistics")
-    public ResponseEntity<TaskService.TaskStatistics> getTaskStatistics(@AuthenticationPrincipal OAuth2User principal) {
+    public ResponseEntity<TaskService.TaskStatistics> getTaskStatistics(Authentication authentication) {
         try {
-            User user = userService.getOrCreateUser(principal);
+            User user = getCurrentUser(authentication);
+            if (user == null) {
+                return ResponseEntity.badRequest().build();
+            }
+            
             TaskService.TaskStatistics stats = taskService.getTaskStatistics(user);
             return ResponseEntity.ok(stats);
         } catch (Exception e) {
+            log.error("Error getting task statistics", e);
             return ResponseEntity.badRequest().build();
         }
     }

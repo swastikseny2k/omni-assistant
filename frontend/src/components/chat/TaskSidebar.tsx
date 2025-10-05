@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTask } from '../../contexts/TaskContext';
 import { Task, TaskPriority, TaskStatus, getTaskPriorityColor, getTaskStatusDisplayName, getTaskPriorityDisplayName, isTaskOverdue, isTaskDueSoon } from '../../types/task';
+import { formatDueDate, utcToLocal } from '../../utils/dateUtils';
 import './TaskSidebar.css';
 
 interface TaskSidebarProps {
@@ -8,15 +9,35 @@ interface TaskSidebarProps {
 }
 
 const TaskSidebar: React.FC<TaskSidebarProps> = ({ className = '' }) => {
-  const { tasks, fetchOverdueTasks, fetchTasksDueSoon, refreshTasks } = useTask();
+  const { tasks, fetchTasks, fetchOverdueTasks, fetchTasksDueSoon, refreshTasks } = useTask();
   const [overdueTasks, setOverdueTasks] = useState<Task[]>([]);
   const [dueSoonTasks, setDueSoonTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'overdue' | 'dueSoon'>('overdue');
 
   useEffect(() => {
-    loadTasks();
-  }, []);
+    const initializeTasks = async () => {
+      try {
+        // First, ensure tasks are loaded in the context
+        if (tasks.length === 0) {
+          await fetchTasks();
+        }
+        // Then load the filtered tasks for the sidebar
+        loadTasks();
+      } catch (error) {
+        console.error('Failed to initialize tasks for sidebar:', error);
+      }
+    };
+    
+    initializeTasks();
+  }, []); // Only run once on mount
+
+  // Reload filtered tasks when the main tasks array changes
+  useEffect(() => {
+    if (tasks.length > 0) {
+      loadTasks();
+    }
+  }, [tasks.length]); // Only depend on tasks.length to avoid infinite loops
 
   const loadTasks = async () => {
     try {
@@ -28,15 +49,15 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ className = '' }) => {
       
       const overdue = tasks.filter(task => 
         task.dueDate && 
-        new Date(task.dueDate) < now && 
+        utcToLocal(task.dueDate) < now && 
         task.status !== TaskStatus.COMPLETED &&
         task.status !== TaskStatus.CANCELLED
       );
       
       const dueSoon = tasks.filter(task => 
         task.dueDate && 
-        new Date(task.dueDate) >= now && 
-        new Date(task.dueDate) <= oneDayFromNow &&
+        utcToLocal(task.dueDate) >= now && 
+        utcToLocal(task.dueDate) <= oneDayFromNow &&
         task.status !== TaskStatus.COMPLETED &&
         task.status !== TaskStatus.CANCELLED
       );
@@ -53,14 +74,14 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ className = '' }) => {
         const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
         if (priorityDiff !== 0) return priorityDiff;
         // If same priority, sort by due date (most overdue first)
-        return new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime();
+        return utcToLocal(a.dueDate!).getTime() - utcToLocal(b.dueDate!).getTime();
       });
       
       const sortedDueSoon = dueSoon.sort((a, b) => {
         const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
         if (priorityDiff !== 0) return priorityDiff;
         // If same priority, sort by due date (earliest first)
-        return new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime();
+        return utcToLocal(a.dueDate!).getTime() - utcToLocal(b.dueDate!).getTime();
       });
       
       setOverdueTasks(sortedOverdue);
@@ -81,22 +102,6 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ className = '' }) => {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = date.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays < 0) {
-      return `${Math.abs(diffDays)} day${Math.abs(diffDays) !== 1 ? 's' : ''} overdue`;
-    } else if (diffDays === 0) {
-      return 'Due today';
-    } else if (diffDays === 1) {
-      return 'Due tomorrow';
-    } else {
-      return `Due in ${diffDays} days`;
-    }
-  };
 
   const renderTaskItem = (task: Task) => (
     <div key={task.id} className="task-sidebar-item">
@@ -113,7 +118,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ className = '' }) => {
         <div className="task-title">{task.title}</div>
         {task.dueDate && (
           <div className={`task-due-date ${isTaskOverdue(task) ? 'overdue' : isTaskDueSoon(task) ? 'due-soon' : ''}`}>
-            {formatDate(task.dueDate)}
+            {formatDueDate(task.dueDate)}
           </div>
         )}
       </div>

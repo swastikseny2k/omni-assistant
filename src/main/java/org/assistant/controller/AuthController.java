@@ -1,211 +1,82 @@
 package org.assistant.controller;
 
-import org.assistant.config.FrontendProperties;
-import org.assistant.entity.User;
-import org.assistant.service.JwtService;
-import org.assistant.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.web.bind.annotation.*;
-
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import org.assistant.entity.User;
+import org.assistant.service.UserService;
+import org.assistant.service.JwtService;
+import org.assistant.service.EmailService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
+@CrossOrigin(origins = "*")
 public class AuthController {
-    
+
     @Autowired
     private UserService userService;
-    
-    @Autowired
-    private JwtService jwtService;
-    
+
     @Autowired
     private PasswordEncoder passwordEncoder;
-    
+
     @Autowired
-    private FrontendProperties frontendProperties;
-    
-    @GetMapping("/success")
-    public ResponseEntity<Map<String, Object>> loginSuccess(Authentication authentication) {
-        try {
-            OAuth2User oauth2User = (OAuth2User) authentication.getPrincipal();
-            
-            String googleId = oauth2User.getName(); // This will be 'sub' from Google OAuth
-            String email = oauth2User.getAttribute("email");
-            String name = oauth2User.getAttribute("name");
-            String picture = oauth2User.getAttribute("picture");
-            
-            // Create or update user
-            User user = new User(googleId, email, name, picture);
-            User savedUser = userService.saveOrUpdateUser(user);
-            
-            // Generate JWT token
-            String token = jwtService.generateToken(email, savedUser.getId());
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("token", token);
-            response.put("user", createUserResponse(savedUser));
-            
-            return ResponseEntity.ok(response);
-            
-        } catch (Exception e) {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("success", false);
-            errorResponse.put("message", "Authentication failed: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-        }
-    }
-    
-    @GetMapping("/failure")
-    public ResponseEntity<Map<String, Object>> loginFailure() {
-        Map<String, Object> response = new HashMap<>();
-        response.put("success", false);
-        response.put("message", "Authentication failed");
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-    }
-    
-    @GetMapping("/user")
-    public ResponseEntity<Map<String, Object>> getCurrentUser(@RequestHeader("Authorization") String authHeader) {
-        try {
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                Map<String, Object> response = new HashMap<>();
-                response.put("success", false);
-                response.put("message", "Invalid token format");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-            }
-            
-            String token = authHeader.substring(7);
-            
-            if (jwtService.validateToken(token)) {
-                String email = jwtService.extractEmail(token);
-                Long userId = jwtService.extractUserId(token);
-                
-                User user = userService.findById(userId);
-                if (user == null) {
-                    Map<String, Object> response = new HashMap<>();
-                    response.put("success", false);
-                    response.put("message", "User not found");
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-                }
-                
-                Map<String, Object> response = new HashMap<>();
-                response.put("success", true);
-                response.put("user", createUserResponse(user));
-                
-                return ResponseEntity.ok(response);
-            } else {
-                Map<String, Object> response = new HashMap<>();
-                response.put("success", false);
-                response.put("message", "Invalid or expired token");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-            }
-            
-        } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "Error retrieving user: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
-    }
-    
+    private JwtService jwtService;
+
+    @Autowired
+    private EmailService emailService;
+
     @GetMapping("/validate")
-    public ResponseEntity<Map<String, Object>> validateToken(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<Map<String, Object>> validateToken(@RequestHeader("Authorization") String token) {
         try {
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                Map<String, Object> response = new HashMap<>();
-                response.put("success", false);
-                response.put("message", "Invalid token format");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            // Remove "Bearer " prefix
+            String cleanToken = token.substring(7);
+            
+            if (jwtService.validateToken(cleanToken)) {
+                String email = jwtService.extractEmail(cleanToken);
+                User user = userService.findByEmail(email);
+                
+                if (user != null && user.getIsActive()) {
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("valid", true);
+                    response.put("user", createUserResponse(user));
+                    return ResponseEntity.ok(response);
+                }
             }
             
-            String token = authHeader.substring(7);
-            
-            if (jwtService.validateToken(token)) {
-                String email = jwtService.extractEmail(token);
-                Long userId = jwtService.extractUserId(token);
-                
-                User user = userService.findById(userId);
-                
-                Map<String, Object> response = new HashMap<>();
-                response.put("success", true);
-                response.put("user", createUserResponse(user));
-                
-                return ResponseEntity.ok(response);
-            } else {
-                Map<String, Object> response = new HashMap<>();
-                response.put("success", false);
-                response.put("message", "Invalid or expired token");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-            }
+            Map<String, Object> response = new HashMap<>();
+            response.put("valid", false);
+            response.put("message", "Invalid token");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             
         } catch (Exception e) {
             Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "Token validation failed: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            response.put("valid", false);
+            response.put("message", "Token validation failed");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
     }
-    
-    @PostMapping("/logout")
-    public ResponseEntity<Map<String, Object>> logout(@RequestHeader(value = "Authorization", required = false) String authHeader) {
-        Map<String, Object> response = new HashMap<>();
-        
-        try {
-            // Extract and invalidate the JWT token
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                String token = authHeader.substring(7);
-                
-                // Validate token before invalidating
-                if (jwtService.validateToken(token)) {
-                    Long userId = jwtService.extractUserId(token);
-                    
-                    // Invalidate the token
-                    jwtService.invalidateToken(token);
-                    
-                    // Optionally invalidate all user tokens (for security)
-                    // jwtService.invalidateAllUserTokens(userId);
-                    
-                    response.put("success", true);
-                    response.put("message", "Logged out successfully - token invalidated");
-                } else {
-                    response.put("success", true);
-                    response.put("message", "Logged out successfully - token was already invalid");
-                }
-            } else {
-                response.put("success", true);
-                response.put("message", "Logged out successfully");
-            }
-            
-        } catch (Exception e) {
-            response.put("success", true);
-            response.put("message", "Logged out successfully");
-            // Don't fail logout even if token invalidation fails
-            System.out.println("Logout token invalidation error: " + e.getMessage());
-        }
-        
-        return ResponseEntity.ok(response);
-    }
-    
+
     @PostMapping("/register")
     public ResponseEntity<Map<String, Object>> register(@Valid @RequestBody RegisterRequest registerRequest) {
         try {
+            // Validate password confirmation
+            if (!registerRequest.isPasswordMatching()) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("message", "Passwords do not match");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
             // Check if user already exists
             User existingUser = userService.findByEmail(registerRequest.getEmail());
             if (existingUser != null) {
@@ -248,29 +119,20 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@Valid @RequestBody LoginRequest loginRequest) {
         try {
-            // Find user by email
             User user = userService.findByEmail(loginRequest.getEmail());
-            if (user == null) {
+            
+            if (user == null || !passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
                 Map<String, Object> response = new HashMap<>();
                 response.put("success", false);
                 response.put("message", "Invalid email or password");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
             
-            // Check if user has a password (not a Google OAuth-only user)
-            if (user.getPassword() == null) {
+            if (!user.getIsActive()) {
                 Map<String, Object> response = new HashMap<>();
                 response.put("success", false);
-                response.put("message", "This account was created with Google. Please sign in with Google instead.");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-            }
-            
-            // Check password
-            if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-                Map<String, Object> response = new HashMap<>();
-                response.put("success", false);
-                response.put("message", "Invalid email or password");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+                response.put("message", "Account is deactivated");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
             
             // Update last login
@@ -295,93 +157,121 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
-    
-    @PostMapping("/logout/spring")
-    public ResponseEntity<Map<String, Object>> springSecurityLogout(HttpServletRequest request, HttpServletResponse response) {
-        Map<String, Object> responseBody = new HashMap<>();
-        
+
+    @PostMapping("/logout")
+    public ResponseEntity<Map<String, Object>> logout(@RequestHeader("Authorization") String token) {
         try {
-            // Invalidate Spring Security session
-            if (request.getSession(false) != null) {
-                request.getSession().invalidate();
+            // Remove "Bearer " prefix
+            String cleanToken = token.substring(7);
+            
+            // In a more sophisticated implementation, you might want to blacklist the token
+            // For now, we'll just return success since JWT tokens are stateless
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Logout successful");
+            
+            // Optional: Invalidate token on server side (requires token blacklist implementation)
+            try {
+                // jwtService.invalidateToken(cleanToken);
+            } catch (Exception e) {
+                System.out.println("Logout token invalidation error: " + e.getMessage());
             }
             
-            // Clear any Spring Security authentication
-            SecurityContextHolder.clearContext();
-            
-            responseBody.put("success", true);
-            responseBody.put("message", "Spring Security session cleared");
+            return ResponseEntity.ok(response);
             
         } catch (Exception e) {
-            responseBody.put("success", true);
-            responseBody.put("message", "Logout completed");
-            System.out.println("Spring Security logout error: " + e.getMessage());
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Logout failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
-        
-        return ResponseEntity.ok(responseBody);
     }
-    
-    @GetMapping("/debug/users")
-    public ResponseEntity<Map<String, Object>> getAllUsers() {
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Map<String, Object>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest forgotPasswordRequest) {
         try {
-            // This is just for debugging - remove in production
-            java.util.List<User> users = userService.findAllUsers();
+            User user = userService.findByEmail(forgotPasswordRequest.getEmail());
+            
+            if (user == null) {
+                // Don't reveal if email exists or not for security
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", true);
+                response.put("message", "If the email exists, a password reset link has been sent");
+                return ResponseEntity.ok(response);
+            }
+            
+            // Generate reset token
+            String resetToken = jwtService.generateToken(user.getEmail(), user.getId());
+            
+            // Send email with reset link
+            String resetLink = "http://localhost:3000/reset-password?token=" + resetToken;
+            emailService.sendPasswordResetEmail(user.getEmail(), user.getName(), resetLink);
             
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
-            response.put("userCount", users.size());
-            response.put("users", users);
+            response.put("message", "Password reset link sent to your email");
             
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
-            response.put("message", "Error fetching users: " + e.getMessage());
-            return ResponseEntity.status(500).body(response);
+            response.put("message", "Failed to send password reset email");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
-    
-    @GetMapping("/debug/blacklist")
-    public ResponseEntity<Map<String, Object>> getBlacklistStatus() {
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Map<String, Object>> resetPassword(@Valid @RequestBody ResetPasswordRequest resetRequest) {
         try {
+            // Validate reset token
+            if (!jwtService.validateToken(resetRequest.getToken())) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("message", "Invalid or expired reset token");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            // Validate password confirmation
+            if (!resetRequest.isPasswordMatching()) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("message", "Passwords do not match");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            String email = jwtService.extractEmail(resetRequest.getToken());
+            User user = userService.findByEmail(email);
+            
+            if (user == null) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("message", "User not found");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            // Update password
+            user.setPassword(passwordEncoder.encode(resetRequest.getPassword()));
+            userService.saveUser(user);
+            
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
-            response.put("blacklistSize", jwtService.getBlacklistSize());
-            response.put("message", "Token blacklist status retrieved");
+            response.put("message", "Password reset successfully");
             
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
-            response.put("message", "Error getting blacklist status: " + e.getMessage());
-            return ResponseEntity.status(500).body(response);
+            response.put("message", "Password reset failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
-    
-    @GetMapping("/debug/config")
-    public ResponseEntity<Map<String, Object>> getConfig() {
-        try {
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("frontendUrl", frontendProperties.getUrl());
-            response.put("message", "Configuration retrieved");
-            
-            return ResponseEntity.ok(response);
-            
-        } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "Error getting config: " + e.getMessage());
-            return ResponseEntity.status(500).body(response);
-        }
-    }
-    
+
     private Map<String, Object> createUserResponse(User user) {
         Map<String, Object> userResponse = new HashMap<>();
         userResponse.put("id", user.getId());
-        userResponse.put("googleId", user.getGoogleId());
         userResponse.put("email", user.getEmail());
         userResponse.put("name", user.getName());
         userResponse.put("picture", user.getPicture());
@@ -405,6 +295,9 @@ public class AuthController {
         @Size(min = 6, message = "Password must be at least 6 characters")
         private String password;
         
+        @NotBlank(message = "Confirm password is required")
+        private String confirmPassword;
+        
         // Getters and setters
         public String getName() { return name; }
         public void setName(String name) { this.name = name; }
@@ -414,6 +307,14 @@ public class AuthController {
         
         public String getPassword() { return password; }
         public void setPassword(String password) { this.password = password; }
+        
+        public String getConfirmPassword() { return confirmPassword; }
+        public void setConfirmPassword(String confirmPassword) { this.confirmPassword = confirmPassword; }
+        
+        // Validation method
+        public boolean isPasswordMatching() {
+            return password != null && password.equals(confirmPassword);
+        }
     }
     
     public static class LoginRequest {
@@ -430,5 +331,42 @@ public class AuthController {
         
         public String getPassword() { return password; }
         public void setPassword(String password) { this.password = password; }
+    }
+    
+    public static class ForgotPasswordRequest {
+        @NotBlank(message = "Email is required")
+        @Email(message = "Invalid email format")
+        private String email;
+        
+        // Getters and setters
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
+    }
+    
+    public static class ResetPasswordRequest {
+        @NotBlank(message = "Reset token is required")
+        private String token;
+        
+        @NotBlank(message = "Password is required")
+        @Size(min = 6, message = "Password must be at least 6 characters")
+        private String password;
+        
+        @NotBlank(message = "Confirm password is required")
+        private String confirmPassword;
+        
+        // Getters and setters
+        public String getToken() { return token; }
+        public void setToken(String token) { this.token = token; }
+        
+        public String getPassword() { return password; }
+        public void setPassword(String password) { this.password = password; }
+        
+        public String getConfirmPassword() { return confirmPassword; }
+        public void setConfirmPassword(String confirmPassword) { this.confirmPassword = confirmPassword; }
+        
+        // Validation method
+        public boolean isPasswordMatching() {
+            return password != null && password.equals(confirmPassword);
+        }
     }
 }

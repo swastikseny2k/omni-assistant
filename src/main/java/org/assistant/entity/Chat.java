@@ -2,6 +2,7 @@ package org.assistant.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,8 +40,8 @@ public class Chat {
     public Chat(User user, String title) {
         this.user = user;
         this.title = title;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        this.createdAt = LocalDateTime.now(ZoneOffset.UTC);
+        this.updatedAt = LocalDateTime.now(ZoneOffset.UTC);
     }
     
     // Getters and Setters
@@ -104,7 +105,7 @@ public class Chat {
     public void addMessage(ChatMessage message) {
         message.setChat(this);
         this.messages.add(message);
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now(ZoneOffset.UTC);
     }
     
     public ChatMessage getLastMessage() {

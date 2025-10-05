@@ -2,6 +2,7 @@ package org.assistant.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 @Entity
 @Table(name = "chat_messages")
@@ -41,7 +42,7 @@ public class ChatMessage {
         this.chat = chat;
         this.role = role;
         this.content = content;
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = LocalDateTime.now(ZoneOffset.UTC);
     }
     
     public ChatMessage(Chat chat, MessageRole role, String content, String model) {
@@ -49,7 +50,7 @@ public class ChatMessage {
         this.role = role;
         this.content = content;
         this.model = model;
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = LocalDateTime.now(ZoneOffset.UTC);
     }
     
     // Getters and Setters

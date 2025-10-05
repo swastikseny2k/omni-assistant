@@ -3,6 +3,8 @@ package org.assistant.entity;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -72,8 +74,8 @@ public class Task {
     
     // Constructors
     public Task() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        this.createdAt = LocalDateTime.now(ZoneOffset.UTC);
+        this.updatedAt = LocalDateTime.now(ZoneOffset.UTC);
     }
     
     public Task(String title, String description, User owner) {
@@ -91,9 +93,9 @@ public class Task {
     // Business methods
     @PreUpdate
     public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now(ZoneOffset.UTC);
         if (status == TaskStatus.COMPLETED && completedAt == null) {
-            this.completedAt = LocalDateTime.now();
+            this.completedAt = LocalDateTime.now(ZoneOffset.UTC);
         }
     }
     
@@ -124,7 +126,17 @@ public class Task {
     }
     
     public boolean isOverdue() {
-        return dueDate != null && LocalDateTime.now().isAfter(dueDate) && !isCompleted();
+        return dueDate != null && LocalDateTime.now(ZoneOffset.UTC).isAfter(dueDate) && !isCompleted();
+    }
+    
+    // UTC utility methods
+    public static LocalDateTime nowUtc() {
+        return LocalDateTime.now(ZoneOffset.UTC);
+    }
+    
+    public static LocalDateTime toUtc(LocalDateTime localDateTime) {
+        return localDateTime != null ? localDateTime.atZone(ZoneOffset.systemDefault())
+            .withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime() : null;
     }
     
     // Getters and Setters

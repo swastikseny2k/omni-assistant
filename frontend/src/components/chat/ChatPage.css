@@ -1,30 +1,33 @@
 /* Chat Page Styles */
 .chat-page {
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   background: #f9fafb;
 }
 
-.chat-page-header {
+.dashboard-header {
   background: white;
-  border-bottom: 1px solid #e5e7eb;
-  flex-shrink: 0;
+  border-bottom: 1px solid #e0e0e0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
   z-index: 100;
 }
 
 .header-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px 24px;
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  padding: 12px 24px;
-  max-width: none;
+  align-items: center;
 }
 
 .header-left {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 32px;
 }
 
 .sidebar-toggle-mobile {
@@ -48,6 +51,161 @@
   width: 18px;
   height: 18px;
   color: #6b7280;
+}
+
+.dashboard-title {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 700;
+  color: #333;
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.view-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.view-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+}
+
+.view-description {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.user-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.user-email {
+  font-size: 12px;
+  color: #666;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #e0e0e0;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.nav-button {
+  padding: 10px 16px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: white;
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-button:hover {
+  background: #f8f9fa;
+  border-color: #007bff;
+  transform: translateY(-1px);
+}
+
+.tasks-button {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.tasks-button:hover {
+  background: #0056b3;
+  border-color: #0056b3;
+}
+
+.logout-button:hover {
+  background: #dc3545;
+  color: white;
+  border-color: #dc3545;
+}
+
+/* Mobile responsive header styles */
+@media (max-width: 768px) {
+  .sidebar-toggle-mobile {
+    display: flex;
+  }
+  
+  .header-content {
+    padding: 12px 16px;
+  }
+  
+  .header-left {
+    gap: 16px;
+  }
+  
+  .dashboard-title {
+    font-size: 24px;
+  }
+  
+  .view-info {
+    display: none; /* Hide view info on mobile to save space */
+  }
+  
+  .header-right {
+    gap: 12px;
+  }
+  
+  .user-details {
+    display: none; /* Hide user details on mobile to save space */
+  }
+  
+  .user-avatar {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .nav-button {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+  
+  .header-actions {
+    gap: 8px;
+  }
 }
 
 .app-title {
@@ -158,6 +316,7 @@
   flex: 1;
   display: flex;
   overflow: hidden;
+  min-height: 0; /* Allow flex item to shrink */
 }
 
 /* Ensure proper layout with task sidebar */
@@ -216,9 +375,17 @@
     height: 18px;
   }
   
-  /* Hide task sidebar on mobile, show as overlay */
+  /* Show task sidebar on mobile with proper layout */
+  .chat-page-content {
+    flex-direction: column;
+  }
+  
   .task-sidebar {
-    display: none;
+    order: 2;
+  }
+  
+  .chat-interface {
+    order: 1;
   }
 }
 

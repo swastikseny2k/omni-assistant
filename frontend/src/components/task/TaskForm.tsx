@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Task, CreateTaskRequest, UpdateTaskRequest, TaskPriority, TaskStatus, getTaskPriorityDisplayName, getTaskStatusDisplayName } from '../../types/task';
+import { localToUtc } from '../../utils/dateUtils';
 import './TaskForm.css';
 
 interface TaskFormProps {
@@ -93,7 +94,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
         title: formData.title.trim(),
         description: formData.description.trim() || undefined,
         priority: formData.priority,
-        dueDate: formData.dueDate ? new Date(formData.dueDate).toISOString() : undefined
+        dueDate: formData.dueDate ? localToUtc(new Date(formData.dueDate)) : undefined
       };
 
       // Add parentTaskId for create mode

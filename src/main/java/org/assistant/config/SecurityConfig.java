@@ -40,6 +40,7 @@ public class SecurityConfig {
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/api/auth/**", "/login/**", "/oauth2/**", "/error").permitAll()
+                        .requestMatchers("/api/health", "/api/ping").permitAll()  // Allow health checks
                         .requestMatchers("OPTIONS", "/**").permitAll()
                         .anyRequest().authenticated()
                 )
@@ -74,10 +75,12 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList(
-                frontendProperties.getUrl(),  // Use properties
-                "http://localhost:3000"  // Keep for development
+        
+        // More permissive CORS for development and different deployment scenarios
+        configuration.setAllowedOriginPatterns(Arrays.asList(
+                "*"  // Allow all origins for now - can be restricted in production
         ));
+        
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
@@ -98,17 +101,12 @@ public class SecurityConfig {
         StrictHttpFirewall firewall = new StrictHttpFirewall();
         // Allow double slashes in URLs (needed for some OAuth redirects)
         firewall.setAllowUrlEncodedSlash(true);
-        firewall.setAllowUrlEncodedPercent(true);
-        firewall.setAllowBackSlash(true);
         return firewall;
     }
     
-    /**
-     * Helper method to clean URLs by removing trailing slashes to prevent double slashes
-     */
     private String cleanUrl(String url) {
         if (url == null) {
-            return "";
+            return "http://localhost:3000";
         }
         return url.endsWith("/") ? url.substring(0, url.length() - 1) : url;
     }

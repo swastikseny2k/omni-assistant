@@ -28,7 +28,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onToggleSidebar }) => {
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    scrollToBottom();
+    // Small delay to ensure DOM has updated
+    const timer = setTimeout(() => {
+      scrollToBottom();
+    }, 100);
+    return () => clearTimeout(timer);
   }, [messages]);
 
   // Focus input when chat changes
@@ -39,7 +43,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onToggleSidebar }) => {
   }, [currentChat]);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesEndRef.current) {
+      const messagesContainer = messagesEndRef.current.parentElement;
+      if (messagesContainer) {
+        messagesContainer.scrollTo({
+          top: messagesContainer.scrollHeight,
+          behavior: 'smooth'
+        });
+      }
+    }
   };
 
   const handleSendMessage = async () => {

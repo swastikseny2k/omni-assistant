@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,8 +27,9 @@ public class TaskService {
     
     // Create a new task
     public Task createTask(Task task) {
-        task.setCreatedAt(LocalDateTime.now());
-        task.setUpdatedAt(LocalDateTime.now());
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
+        task.setCreatedAt(now);
+        task.setUpdatedAt(now);
         return taskRepository.save(task);
     }
     
@@ -45,7 +47,7 @@ public class TaskService {
             return List.of();
         }
         
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         
         // Set timestamps for all tasks
         for (Task task : tasks) {

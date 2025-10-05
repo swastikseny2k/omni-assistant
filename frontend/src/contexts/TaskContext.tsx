@@ -9,7 +9,9 @@ import {
   TaskSearchParams, 
   TaskFilters,
   TaskStatus,
-  TaskPriority
+  TaskPriority,
+  isTaskOverdue,
+  isTaskDueSoon
 } from '../types/task';
 
 interface TaskState {
@@ -127,21 +129,12 @@ const taskReducer = (state: TaskState, action: TaskAction): TaskState => {
       
       // Apply overdue filter
       if (state.filters.overdue) {
-        filtered = filtered.filter(task => {
-          if (!task.dueDate || task.status === TaskStatus.COMPLETED) return false;
-          return new Date(task.dueDate) < new Date();
-        });
+        filtered = filtered.filter(task => isTaskOverdue(task));
       }
       
       // Apply due soon filter
       if (state.filters.dueSoon) {
-        filtered = filtered.filter(task => {
-          if (!task.dueDate || task.status === TaskStatus.COMPLETED) return false;
-          const dueDate = new Date(task.dueDate);
-          const now = new Date();
-          const hoursFromNow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-          return dueDate >= now && dueDate <= hoursFromNow;
-        });
+        filtered = filtered.filter(task => isTaskDueSoon(task));
       }
       
       // Apply search filter
@@ -264,13 +257,20 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
         return;
       }
 
+      console.log('Fetching tasks with token:', token.substring(0, 20) + '...');
       dispatch({ type: 'SET_LOADING', payload: true });
       dispatch({ type: 'SET_ERROR', payload: null });
       
       const tasks = await apiService.getTasks();
+      console.log('Tasks fetched successfully:', tasks.length, 'tasks');
       dispatch({ type: 'SET_TASKS', payload: tasks });
     } catch (error: any) {
       console.error('Failed to fetch tasks:', error);
+      console.error('Error details:', {
+        message: error.message,
+        status: error.status,
+        response: error.response?.data
+      });
       dispatch({ type: 'SET_ERROR', payload: error.message || 'Failed to fetch tasks' });
       throw error;
     } finally {

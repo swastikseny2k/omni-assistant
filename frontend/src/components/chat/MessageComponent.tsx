@@ -1,5 +1,6 @@
 import React from 'react';
 import { ChatMessage } from '../../types/chat';
+import { formatUtcTime } from '../../utils/dateUtils';
 import './MessageComponent.css';
 
 interface MessageComponentProps {
@@ -7,12 +8,6 @@ interface MessageComponentProps {
 }
 
 const MessageComponent: React.FC<MessageComponentProps> = ({ message }) => {
-  const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString([], { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    });
-  };
 
   const formatContent = (content: string) => {
     // Simple markdown-like formatting
@@ -36,7 +31,7 @@ const MessageComponent: React.FC<MessageComponentProps> = ({ message }) => {
           </div>
           <div className="function-info">
             <div className="function-name">{message.functionName}</div>
-            <div className="function-time">{formatTime(message.createdAt)}</div>
+            <div className="function-time">{formatUtcTime(message.createdAt)}</div>
           </div>
         </div>
         
@@ -66,7 +61,7 @@ const MessageComponent: React.FC<MessageComponentProps> = ({ message }) => {
     <div className="message user-message">
       <div className="message-content">
         <div className="message-text">{message.content}</div>
-        <div className="message-time">{formatTime(message.createdAt)}</div>
+        <div className="message-time">{formatUtcTime(message.createdAt)}</div>
       </div>
       <div className="message-avatar user-avatar">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -90,7 +85,7 @@ const MessageComponent: React.FC<MessageComponentProps> = ({ message }) => {
           <div className="assistant-name">
             {message.model === 'deepseek' ? 'DeepSeek' : 'OpenAI'}
           </div>
-          <div className="message-time">{formatTime(message.createdAt)}</div>
+          <div className="message-time">{formatUtcTime(message.createdAt)}</div>
         </div>
         <div 
           className="message-text"

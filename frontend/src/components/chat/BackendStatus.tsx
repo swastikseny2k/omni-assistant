@@ -9,14 +9,22 @@ const BackendStatus: React.FC<BackendStatusProps> = ({ onStatusChange }) => {
   const [isConnected, setIsConnected] = useState<boolean | null>(null);
   const [isChecking, setIsChecking] = useState(false);
 
+  const getApiBaseUrl = () => {
+    // Get the base URL from environment variable, same as ApiService
+    const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+    // Remove /api suffix if present since we're adding it in the endpoint
+    return baseUrl.replace(/\/api$/, '');
+  };
+
   const checkBackendStatus = useCallback(async () => {
     setIsChecking(true);
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch('http://localhost:8080/api/auth/validate', {
+      const apiBaseUrl = getApiBaseUrl();
+      
+      // Use the health endpoint which doesn't require authentication
+      const response = await fetch(`${apiBaseUrl}/api/health`, {
         method: 'GET',
         headers: {
-          'Authorization': token ? `Bearer ${token}` : '',
           'Content-Type': 'application/json',
         },
       });
@@ -24,7 +32,12 @@ const BackendStatus: React.FC<BackendStatusProps> = ({ onStatusChange }) => {
       const connected = response.ok;
       setIsConnected(connected);
       onStatusChange?.(connected);
+      
+      if (!connected) {
+        console.warn(`Backend health check failed: ${response.status} ${response.statusText}`);
+      }
     } catch (error) {
+      console.error('Backend connection check failed:', error);
       setIsConnected(false);
       onStatusChange?.(false);
     } finally {

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Task, TaskStatus, TaskPriority, getTaskPriorityColor, getTaskStatusColor, getTaskPriorityDisplayName, getTaskStatusDisplayName, isTaskOverdue, isTaskDueSoon } from '../../types/task';
+import { formatUtcDate } from '../../utils/dateUtils';
 import './TaskCard.css';
 
 interface TaskCardProps {
@@ -63,7 +64,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
           {task.dueDate && (
             <div className="task-due-date-main">
               <span className={`due-date-text ${isOverdue ? 'overdue' : isDueSoon ? 'due-soon' : ''}`}>
-                📅 Due: {formatDate(task.dueDate)}
+                📅 Due: {formatUtcDate(task.dueDate)}
               </span>
             </div>
           )}
@@ -161,24 +162,24 @@ const TaskCard: React.FC<TaskCardProps> = ({
           
           <div className="task-meta">
             <div className="meta-item">
-              <strong>Created:</strong> {formatDate(task.createdAt)}
+              <strong>Created:</strong> {formatUtcDate(task.createdAt)}
             </div>
             {task.updatedAt !== task.createdAt && (
               <div className="meta-item">
-                <strong>Updated:</strong> {formatDate(task.updatedAt)}
+                <strong>Updated:</strong> {formatUtcDate(task.updatedAt)}
               </div>
             )}
             {task.dueDate && (
               <div className="meta-item">
                 <strong>Due:</strong> 
                 <span className={isOverdue ? 'overdue' : isDueSoon ? 'due-soon' : ''}>
-                  {formatDate(task.dueDate)}
+                  {formatUtcDate(task.dueDate)}
                 </span>
               </div>
             )}
             {task.completedAt && (
               <div className="meta-item">
-                <strong>Completed:</strong> {formatDate(task.completedAt)}
+                <strong>Completed:</strong> {formatUtcDate(task.completedAt)}
               </div>
             )}
           </div>

@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { TaskStatistics } from '../../types/task';
 import { useTask } from '../../contexts/TaskContext';
+import { useAuth } from '../../contexts/AuthContext';
 import './TaskStats.css';
 
 interface TaskStatsProps {
@@ -9,8 +10,22 @@ interface TaskStatsProps {
 
 const TaskStats: React.FC<TaskStatsProps> = ({ className = '' }) => {
   const { statistics, fetchTaskStatistics, loading, error } = useTask();
+  const { isAuthenticated } = useAuth();
 
-  // Removed automatic loading - user must manually refresh
+  // Load statistics automatically when component mounts and user is authenticated
+  useEffect(() => {
+    const loadStatistics = async () => {
+      try {
+        if (isAuthenticated) {
+          await fetchTaskStatistics();
+        }
+      } catch (error: any) {
+        console.error('Failed to load task statistics:', error.message || error);
+      }
+    };
+    
+    loadStatistics();
+  }, [isAuthenticated]); // Run when authentication state changes
 
   if (loading) {
     return (

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useReducer, useEffect, ReactNode } fr
 import { Chat, ChatMessage, AvailableModel, ChatRequest, ChatResponse } from '../types/chat';
 import { ApiError } from '../types/api';
 import chatService from '../services/chatService';
+import { nowUtc } from '../utils/dateUtils';
 
 interface ChatContextType {
   // State
@@ -207,7 +208,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
           id: Date.now() + 1, // Temporary ID
           content: response.response,
           role: 'ASSISTANT',
-          createdAt: new Date().toISOString(),
+          createdAt: nowUtc(),
           model: response.model,
         };
         dispatch({ type: 'ADD_MESSAGE', payload: assistantMessage });

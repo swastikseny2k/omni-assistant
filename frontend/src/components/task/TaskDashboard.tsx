@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTask } from '../../contexts/TaskContext';
-import { TaskFilters, Task } from '../../types/task';
+import { TaskFilters, Task, isTaskOverdue, isTaskDueSoon } from '../../types/task';
 import TaskList from './TaskList';
 import TaskFiltersComponent from './TaskFilters';
 import TaskStats from './TaskStats';
@@ -27,7 +27,18 @@ const TaskDashboard: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<TaskFilters>({});
 
-  // Removed automatic loading - user must manually refresh
+  // Load tasks automatically when component mounts
+  useEffect(() => {
+    const loadInitialTasks = async () => {
+      try {
+        await fetchTasks();
+      } catch (error: any) {
+        console.error('Failed to load initial tasks:', error.message || error);
+      }
+    };
+    
+    loadInitialTasks();
+  }, []); // Only run once on mount
 
   const handleViewChange = async (view: 'all' | 'overdue' | 'dueSoon' | 'topLevel') => {
     setActiveView(view);
@@ -35,17 +46,20 @@ const TaskDashboard: React.FC = () => {
     try {
       switch (view) {
         case 'overdue':
-          await fetchOverdueTasks();
+          // Use local filtering instead of separate API call
+          applyFilters({ ...filters, overdue: true, dueSoon: false, parentTaskId: undefined });
           break;
         case 'dueSoon':
-          await fetchTasksDueSoon(24);
+          // Use local filtering instead of separate API call
+          applyFilters({ ...filters, overdue: false, dueSoon: true, parentTaskId: undefined });
           break;
         case 'topLevel':
           // Filter to show only top-level tasks
-          applyFilters({ ...filters, parentTaskId: undefined });
+          applyFilters({ ...filters, overdue: false, dueSoon: false, parentTaskId: undefined });
           break;
         default:
-          await fetchTasks();
+          // Show all tasks by clearing filters
+          applyFilters({ ...filters, overdue: false, dueSoon: false, parentTaskId: undefined });
           break;
       }
     } catch (error: any) {
@@ -101,18 +115,8 @@ const TaskDashboard: React.FC = () => {
     }
   };
 
-  const overdueCount = tasks.filter(task => {
-    if (!task.dueDate || task.status === 'COMPLETED') return false;
-    return new Date(task.dueDate) < new Date();
-  }).length;
-
-  const dueSoonCount = tasks.filter(task => {
-    if (!task.dueDate || task.status === 'COMPLETED') return false;
-    const dueDate = new Date(task.dueDate);
-    const now = new Date();
-    const hoursFromNow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-    return dueDate >= now && dueDate <= hoursFromNow;
-  }).length;
+  const overdueCount = tasks.filter(task => isTaskOverdue(task)).length;
+  const dueSoonCount = tasks.filter(task => isTaskDueSoon(task)).length;
 
   return (
     <div className="task-dashboard">

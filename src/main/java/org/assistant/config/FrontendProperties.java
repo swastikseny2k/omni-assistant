@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationProperties(prefix = "frontend")
 public class FrontendProperties {
+    
     private String url = "http://localhost:3000";
     
     public String getUrl() {

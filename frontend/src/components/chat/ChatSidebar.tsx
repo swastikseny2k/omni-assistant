@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useChat } from '../../contexts/ChatContext';
 import { Chat } from '../../types/chat';
+import { getRelativeTime } from '../../utils/dateUtils';
 import './ChatSidebar.css';
 
 interface ChatSidebarProps {
@@ -169,7 +170,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, onToggle }) => {
                       </div>
                     )}
                     <div className="chat-meta">
-                      <span className="chat-date">{formatDate(chat.updatedAt)}</span>
+                      <span className="chat-date">{getRelativeTime(chat.updatedAt)}</span>
                       <span className="chat-message-count">{chat.messageCount} messages</span>
                     </div>
                   </div>

@@ -1,3 +1,20 @@
+import { isOverdue as isOverdueUtc, isDueSoon as isDueSoonUtc } from '../utils/dateUtils';
+
+export enum TaskStatus {
+  TODO = 'TODO',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
+  ON_HOLD = 'ON_HOLD'
+}
+
+export enum TaskPriority {
+  LOW = 'LOW',
+  MEDIUM = 'MEDIUM',
+  HIGH = 'HIGH',
+  URGENT = 'URGENT'
+}
+
 export interface Task {
   id: number;
   title: string;
@@ -21,20 +38,6 @@ export interface Task {
   dependentTasks?: Task[];
 }
 
-export enum TaskStatus {
-  TODO = 'TODO',
-  IN_PROGRESS = 'IN_PROGRESS',
-  COMPLETED = 'COMPLETED',
-  CANCELLED = 'CANCELLED',
-  ON_HOLD = 'ON_HOLD'
-}
-
-export enum TaskPriority {
-  LOW = 'LOW',
-  MEDIUM = 'MEDIUM',
-  HIGH = 'HIGH',
-  URGENT = 'URGENT'
-}
 
 export interface CreateTaskRequest {
   title: string;
@@ -137,15 +140,12 @@ export const isTaskOverdue = (task: Task): boolean => {
   if (!task.dueDate || task.status === TaskStatus.COMPLETED) {
     return false;
   }
-  return new Date(task.dueDate) < new Date();
+  return isOverdueUtc(task.dueDate);
 };
 
 export const isTaskDueSoon = (task: Task, hours: number = 24): boolean => {
   if (!task.dueDate || task.status === TaskStatus.COMPLETED) {
     return false;
   }
-  const dueDate = new Date(task.dueDate);
-  const now = new Date();
-  const hoursFromNow = new Date(now.getTime() + hours * 60 * 60 * 1000);
-  return dueDate >= now && dueDate <= hoursFromNow;
+  return isDueSoonUtc(task.dueDate, hours);
 };

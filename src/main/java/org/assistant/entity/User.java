@@ -3,6 +3,7 @@ package org.assistant.entity;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 @Entity
 @Table(name = "users")
@@ -13,10 +14,10 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     private String googleId;
     
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String email;
     
     @Column(nullable = false)
@@ -24,7 +25,7 @@ public class User {
     
     @Column
     private String password;
-    
+
     private String picture;
     
     @Column(name = "created_at")
@@ -38,8 +39,8 @@ public class User {
     
     // Constructors
     public User() {
-        this.createdAt = LocalDateTime.now();
-        this.lastLogin = LocalDateTime.now();
+        this.createdAt = LocalDateTime.now(ZoneOffset.UTC);
+        this.lastLogin = LocalDateTime.now(ZoneOffset.UTC);
     }
     
     public User(String googleId, String email, String name, String picture) {
@@ -56,7 +57,7 @@ public class User {
         this.name = name;
         this.password = password;
     }
-    
+
     // Getters and Setters
     public Long getId() {
         return id;
@@ -125,11 +126,11 @@ public class User {
     public String getPassword() {
         return password;
     }
-    
+
     public void setPassword(String password) {
         this.password = password;
     }
-    
+
     @Override
     public String toString() {
         return "User{" +
