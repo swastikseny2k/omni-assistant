@@ -174,6 +174,9 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
   const sendMessage = async (message: string): Promise<void> => {
     if (!message.trim() || state.isSendingMessage) return;
 
+    console.log('Sending message:', message);
+    console.log('Current auth token:', localStorage.getItem('authToken') ? 'Present' : 'Missing');
+    
     dispatch({ type: 'SET_SENDING_MESSAGE', payload: true });
     dispatch({ type: 'SET_ERROR', payload: null });
 
@@ -226,6 +229,12 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
         errorMessage = 'Cannot connect to the backend server. Please make sure the server is running on http://localhost:8080';
       } else if (errorMessage.includes('401') || errorMessage.includes('Unauthorized')) {
         errorMessage = 'Authentication failed. Please log in again.';
+        // Clear auth data and redirect to login
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('user');
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 2000); // Give user time to see the error message
       }
       
       dispatch({ type: 'SET_ERROR', payload: errorMessage });
