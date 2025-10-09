@@ -1,0 +1,142 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: omni-assistant-app
+  namespace: omni-assistant
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: omni-assistant-app
+  template:
+    metadata:
+      labels:
+        app: omni-assistant-app
+    spec:
+      initContainers:
+      - name: wait-for-mysql
+        image: busybox:1.35
+        command: ['sh', '-c', 'until nc -z mysql-service 3306; do echo waiting for mysql; sleep 2; done;']
+      containers:
+      # Backend container
+      - name: backend
+        image: omni-assistant:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8080
+          name: backend
+        env:
+        - name: SPRING_CONFIG_LOCATION
+          value: "classpath:/application.yml,file:/config/application.yaml"
+        - name: SPRING_DATASOURCE_URL
+          value: "jdbc:mysql://mysql-service:3306/omni_assistant"
+        - name: DB_USERNAME
+          value: "omni_user"
+        - name: DB_PASSWORD
+          value: "omni_password"
+        - name: SPRING_DATASOURCE_USERNAME
+          value: "omni_user"
+        - name: SPRING_DATASOURCE_PASSWORD
+          value: "omni_password"
+        - name: SPRING_PROFILES_ACTIVE
+          value: "production"
+        - name: SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE
+          value: "5"
+        - name: SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE
+          value: "1"
+        - name: JWT_SECRET
+          value: "mySecretKey123456789012345678901234567890"
+        - name: FRONTEND_URL
+          value: "http://localhost:3000"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        volumeMounts:
+        - name: config-volume
+          mountPath: /config
+          readOnly: true
+        readinessProbe:
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        livenessProbe:
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+      # Frontend container
+      - name: frontend
+        image: omni-assistant-frontend:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 3000
+          name: frontend
+        env:
+        - name: REACT_APP_API_URL
+          value: "http://localhost:8080"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
+      volumes:
+      - name: config-volume
+        configMap:
+          name: omni-assistant-config
+---
+# Service for backend
+apiVersion: v1
+kind: Service
+metadata:
+  name: omni-assistant-service
+  namespace: omni-assistant
+spec:
+  selector:
+    app: omni-assistant-app
+  ports:
+  - name: backend
+    port: 8080
+    targetPort: 8080
+  type: LoadBalancer
+---
+# Service for frontend
+apiVersion: v1
+kind: Service
+metadata:
+  name: omni-assistant-frontend-service
+  namespace: omni-assistant
+spec:
+  selector:
+    app: omni-assistant-app
+  ports:
+  - name: frontend
+    port: 80
+    targetPort: 3000
+  type: LoadBalancer

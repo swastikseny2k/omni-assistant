@@ -1,9 +1,10 @@
 /* Chat Page Styles */
 .chat-page {
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   background: #f9fafb;
+  overflow: hidden; /* Prevent page scrolling */
 }
 
 /* Redirect Loading Styles */
@@ -49,6 +50,7 @@
   position: sticky;
   top: 0;
   z-index: 100;
+  flex-shrink: 0; /* Prevent header from shrinking */
 }
 
 .header-content {
@@ -210,50 +212,6 @@
   border-color: #dc3545;
 }
 
-/* Mobile responsive header styles */
-@media (max-width: 768px) {
-  .sidebar-toggle-mobile {
-    display: flex;
-  }
-  
-  .header-content {
-    padding: 12px 16px;
-  }
-  
-  .header-left {
-    gap: 16px;
-  }
-  
-  .dashboard-title {
-    font-size: 24px;
-  }
-  
-  .view-info {
-    display: none; /* Hide view info on mobile to save space */
-  }
-  
-  .header-right {
-    gap: 12px;
-  }
-  
-  .user-details {
-    display: none; /* Hide user details on mobile to save space */
-  }
-  
-  .user-avatar {
-    width: 32px;
-    height: 32px;
-  }
-  
-  .nav-button {
-    padding: 8px 12px;
-    font-size: 12px;
-  }
-  
-  .header-actions {
-    gap: 8px;
-  }
-}
 
 .app-title {
   font-size: 20px;
@@ -364,6 +322,8 @@
   display: flex;
   overflow: hidden;
   min-height: 0; /* Allow flex item to shrink */
+  height: calc(100vh - 120px); /* Full height minus header */
+  max-height: calc(100vh - 120px); /* Prevent overflow */
 }
 
 /* Ensure proper layout with task sidebar */
@@ -374,79 +334,8 @@
 .chat-page-content > .chat-interface {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .sidebar-toggle-mobile {
-    display: flex;
-  }
-  
-  .header-content {
-    padding: 8px 16px;
-  }
-  
-  .app-title {
-    font-size: 18px;
-  }
-  
-  .nav-button span {
-    display: none;
-  }
-  
-  .nav-button {
-    padding: 6px 8px;
-    font-size: 12px;
-  }
-  
-  .nav-button svg {
-    width: 18px;
-    height: 18px;
-  }
-  
-  .user-details {
-    display: none;
-  }
-  
-  .logout-button {
-    padding: 6px 8px;
-    font-size: 12px;
-  }
-  
-  .logout-button span {
-    display: none;
-  }
-  
-  .logout-button svg {
-    width: 18px;
-    height: 18px;
-  }
-  
-  /* Show task sidebar on mobile with proper layout */
-  .chat-page-content {
-    flex-direction: column;
-  }
-  
-  .task-sidebar {
-    order: 2;
-  }
-  
-  .chat-interface {
-    order: 1;
-  }
-}
-
-@media (max-width: 480px) {
-  .header-content {
-    padding: 6px 12px;
-  }
-  
-  .app-title {
-    font-size: 16px;
-  }
-  
-  .user-avatar {
-    width: 28px;
-    height: 28px;
-  }
-}

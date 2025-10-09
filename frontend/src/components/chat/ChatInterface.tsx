@@ -177,22 +177,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onToggleSidebar }) => {
       
       <div className="chat-header-right">
         <BackendStatus />
-        <div className="model-selector">
-          <label htmlFor="model-select">Model:</label>
-          <select
-            id="model-select"
-            value={selectedModel}
-            onChange={(e) => handleModelChange(e.target.value)}
-            className="model-select"
-            disabled={isSendingMessage}
-          >
-            {availableModels && availableModels.map((model) => (
-              <option key={model.id} value={model.id}>
-                {model.name} {model.supportsFunctionCalling ? '🔧' : ''}
-              </option>
-            ))}
-          </select>
-        </div>
       </div>
     </div>
   );
@@ -239,54 +223,80 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onToggleSidebar }) => {
       )}
       
       <div className="input-container">
-        <div className="input-wrapper">
+        {/* Model selector and input info above the input field */}
+          <table width="100%">
+              <tr>
+                  <div className="input-header">
+                      <div className="model-selector">
+                          <label htmlFor="model-select">Model:</label>
+                          <select
+                              id="model-select"
+                              value={selectedModel}
+                              onChange={(e) => handleModelChange(e.target.value)}
+                              className="model-select"
+                              disabled={isSendingMessage}
+                          >
+                              {availableModels && availableModels.map((model) => (
+                                  <option key={model.id} value={model.id}>
+                                      {model.name} {model.supportsFunctionCalling ? '🔧' : ''}
+                                  </option>
+                              ))}
+                          </select>
+                      </div>
+                      <div className="input-info">
+                          <div className="model-info">
+                              Using {getCurrentModelInfo()?.name || 'AI'}
+                              {getCurrentModelInfo()?.supportsFunctionCalling && ' with function calling'}
+                          </div>
+                          <div className="input-hint">
+                              Press Enter to send, Shift+Enter for new line
+                          </div>
+                      </div>
+                  </div>
+              </tr>
+              <tr>
+                  <div className="input-field-row">
+                      <div className="input-wrapper">
           <textarea
-            ref={textareaRef}
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            onKeyDown={handleKeyPress}
-            placeholder={currentChat ? "Type your message..." : "Start a new conversation..."}
-            className="message-input"
-            disabled={isSendingMessage}
-            rows={1}
-            style={{
-              height: 'auto',
-              minHeight: '24px',
-              maxHeight: '120px',
-            }}
-            onInput={(e) => {
-              const target = e.target as HTMLTextAreaElement;
-              target.style.height = 'auto';
-              target.style.height = Math.min(target.scrollHeight, 120) + 'px';
-            }}
+              ref={textareaRef}
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              onKeyDown={handleKeyPress}
+              placeholder={currentChat ? "Type your message..." : "Start a new conversation..."}
+              className="message-input"
+              disabled={isSendingMessage}
+              rows={1}
+              style={{
+                  height: 'auto',
+                  minHeight: '24px',
+                  maxHeight: '120px',
+              }}
+              onInput={(e) => {
+                  const target = e.target as HTMLTextAreaElement;
+                  target.style.height = 'auto';
+                  target.style.height = Math.min(target.scrollHeight, 120) + 'px';
+              }}
           />
-          <button
-            onClick={handleSendMessage}
-            disabled={!inputMessage.trim() || isSendingMessage}
-            className="send-button"
-          >
-            {isSendingMessage ? (
-              <div className="loading-spinner">
-                <div className="spinner"></div>
-              </div>
-            ) : (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="22" y1="2" x2="11" y2="13"></line>
-                <polygon points="22,2 15,22 11,13 2,9 22,2"></polygon>
-              </svg>
-            )}
-          </button>
-        </div>
-        
-        <div className="input-footer">
-          <div className="model-info">
-            Using {getCurrentModelInfo()?.name || 'AI'} 
-            {getCurrentModelInfo()?.supportsFunctionCalling && ' with function calling'}
-          </div>
-          <div className="input-hint">
-            Press Enter to send, Shift+Enter for new line
-          </div>
-        </div>
+                          <button
+                              onClick={handleSendMessage}
+                              disabled={!inputMessage.trim() || isSendingMessage}
+                              className="send-button"
+                          >
+                              {isSendingMessage ? (
+                                  <div className="loading-spinner">
+                                      <div className="spinner"></div>
+                                  </div>
+                              ) : (
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                      <line x1="22" y1="2" x2="11" y2="13"></line>
+                                      <polygon points="22,2 15,22 11,13 2,9 22,2"></polygon>
+                                  </svg>
+                              )}
+                          </button>
+                      </div>
+                  </div>
+              </tr>
+          </table>
       </div>
     </div>
   );

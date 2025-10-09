@@ -23,7 +23,7 @@ class ApiService {
 
   constructor() {
     this.api = axios.create({
-      baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8080/api',
+      baseURL: process.env.REACT_APP_API_URL || '/api',
       timeout: 10000,
       headers: {
         'Content-Type': 'application/json',
@@ -57,10 +57,14 @@ class ApiService {
         };
 
         if (error.response?.status === 401) {
-          // Token expired or invalid
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('user');
-          window.location.href = '/login';
+          // Only redirect to login for non-validation endpoints
+          const url = error.config?.url || '';
+          if (!url.includes('/auth/validate')) {
+            // Token expired or invalid for protected endpoints
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('user');
+            window.location.href = '/login';
+          }
         }
 
         return Promise.reject(apiError);

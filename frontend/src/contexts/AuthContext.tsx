@@ -96,14 +96,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               payload: { user: response.user, token: response.token },
             });
           } else {
-            throw new Error('Invalid token');
+            // Clear invalid token data but don't redirect immediately
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('user');
+            dispatch({ type: 'AUTH_FAILURE', payload: 'Session expired' });
           }
         } catch (error) {
+          // Clear invalid token data but don't redirect immediately
           localStorage.removeItem('authToken');
           localStorage.removeItem('user');
           dispatch({ type: 'AUTH_FAILURE', payload: 'Session expired' });
         }
       } else {
+        // No token found, user is not authenticated
         dispatch({ type: 'AUTH_FAILURE', payload: '' });
       }
     };
