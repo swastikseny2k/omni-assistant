@@ -27,6 +27,7 @@ export interface Task {
   completedAt?: string;
   createdFromEmail: boolean;
   emailSourceId?: string;
+  notes?: string;
   owner: {
     id: number;
     name: string;
@@ -45,6 +46,7 @@ export interface CreateTaskRequest {
   priority?: TaskPriority;
   dueDate?: string;
   parentTaskId?: number;
+  notes?: string;
 }
 
 export interface UpdateTaskRequest {
@@ -53,6 +55,7 @@ export interface UpdateTaskRequest {
   status?: TaskStatus;
   priority?: TaskPriority;
   dueDate?: string;
+  notes?: string;
 }
 
 export interface CreateTaskFromEmailRequest {

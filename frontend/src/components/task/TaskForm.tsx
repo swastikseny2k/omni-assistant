@@ -21,6 +21,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
   const [formData, setFormData] = useState({
     title: '',
     description: '',
+    notes: '',
     priority: TaskPriority.MEDIUM,
     status: TaskStatus.TODO,
     dueDate: ''
@@ -33,6 +34,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
       setFormData({
         title: task.title,
         description: task.description || '',
+        notes: task.notes || '',
         priority: task.priority,
         status: task.status,
         dueDate: task.dueDate ? new Date(task.dueDate).toISOString().slice(0, 16) : ''
@@ -93,6 +95,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
       const taskData: CreateTaskRequest | UpdateTaskRequest = {
         title: formData.title.trim(),
         description: formData.description.trim() || undefined,
+        notes: formData.notes.trim() || undefined,
         priority: formData.priority,
         dueDate: formData.dueDate ? localToUtc(new Date(formData.dueDate)) : undefined
       };
@@ -170,6 +173,22 @@ const TaskForm: React.FC<TaskFormProps> = ({
               {formData.description.length}/1000 characters
             </div>
             {errors.description && <div className="error-message">{errors.description}</div>}
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="notes" className="form-label">
+              Notes
+            </label>
+            <textarea
+              id="notes"
+              name="notes"
+              value={formData.notes}
+              onChange={handleInputChange}
+              className="form-textarea"
+              placeholder="Add notes to this task..."
+              rows={4}
+              disabled={loading}
+            />
           </div>
 
           <div className="form-row">

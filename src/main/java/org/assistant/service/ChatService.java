@@ -14,11 +14,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.http.*;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class ChatService {
@@ -139,6 +135,8 @@ public class ChatService {
             result = handleGetAllTasksFunction(user);
         } else if ("filter_tasks".equals(functionName) && user != null) {
             result = handleFilterTasksFunction(functionArgs, user);
+        } else if ("add_task_note".equals(functionName) && user != null) {
+            result = handleAddTaskNoteFunction(functionArgs, user);
         } else {
             result = "Could not execute function: " + functionName;
         }
@@ -215,7 +213,20 @@ public class ChatService {
                 "required", Arrays.asList("tasks")
         ));
 
-        return Arrays.asList(createTaskFunction, getAllTasksFunction, filterTasksFunction, createMultipleTasksFunction);
+        // Define the add note to task function
+        Map<String, Object> addTaskNoteFunction = new HashMap<>();
+        addTaskNoteFunction.put("name", "add_task_note");
+        addTaskNoteFunction.put("description", "Add or update notes for a specific task");
+        addTaskNoteFunction.put("parameters", Map.of(
+                "type", "object",
+                "properties", Map.of(
+                        "taskId", Map.of("type", "integer", "description", "The ID of the task to add notes to"),
+                        "notes", Map.of("type", "string", "description", "The notes to add to the task")
+                ),
+                "required", Arrays.asList("taskId", "notes")
+        ));
+
+        return Arrays.asList(createTaskFunction, getAllTasksFunction, filterTasksFunction, createMultipleTasksFunction, addTaskNoteFunction);
     }
     
     private List<Map<String, Object>> buildConversationHistory(Chat chat, String currentMessage) {
@@ -535,6 +546,37 @@ public class ChatService {
             return response.toString();
         } catch (Exception e) {
             return "❌ I encountered an error while filtering your tasks: " + e.getMessage() + ". Please try again.";
+        }
+    }
+    
+    private String handleAddTaskNoteFunction(String functionArgs, User user) {
+        try {
+            // Parse the JSON arguments
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            Map<String, Object> args = mapper.readValue(functionArgs, Map.class);
+            
+            Integer taskIdInt = (Integer) args.get("taskId");
+            Long taskId = taskIdInt.longValue();
+            String notes = (String) args.get("notes");
+            
+            // Get the task
+            Optional<Task> taskOpt = taskService.getTaskByIdAndOwner(taskId, user);
+            
+            if (!taskOpt.isPresent()) {
+                return "❌ Task with ID " + taskId + " not found. Please check the task ID and try again.";
+            }
+            
+            Task task = taskOpt.get();
+            
+            // Update the notes
+            task.setNotes(notes);
+            taskService.updateTask(task);
+            
+            return String.format("✅ Successfully added notes to task '%s' (ID: %d).\n\n**Notes:**\n%s", 
+                task.getTitle(), task.getId(), notes);
+            
+        } catch (Exception e) {
+            return "❌ I encountered an error while adding notes to the task: " + e.getMessage() + ". Please try again.";
         }
     }
     

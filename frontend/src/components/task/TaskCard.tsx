@@ -160,6 +160,13 @@ const TaskCard: React.FC<TaskCardProps> = ({
             </div>
           )}
           
+          {task.notes && (
+            <div className="task-notes">
+              <strong>Notes:</strong>
+              <p>{task.notes}</p>
+            </div>
+          )}
+          
           <div className="task-meta">
             <div className="meta-item">
               <strong>Created:</strong> {formatUtcDate(task.createdAt)}

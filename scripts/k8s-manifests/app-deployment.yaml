@@ -80,9 +80,9 @@ spec:
         ports:
         - containerPort: 3000
           name: frontend
-        env:
-        - name: REACT_APP_API_URL
-          value: "http://localhost:8080"
+#        env:
+#        - name: REACT_APP_API_URL
+#          value: "http://localhost:8080"
         resources:
           requests:
             memory: "128Mi"

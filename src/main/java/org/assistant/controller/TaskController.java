@@ -87,6 +87,10 @@ public class TaskController {
                 task.setDueDate(request.getDueDate());
             }
             
+            if (request.getNotes() != null) {
+                task.setNotes(request.getNotes());
+            }
+            
             if (request.getParentTaskId() != null) {
                 Optional<Task> parentTask = taskService.getTaskByIdAndOwner(request.getParentTaskId(), user);
                 if (parentTask.isPresent()) {
@@ -223,6 +227,10 @@ public class TaskController {
                     task.setDueDate(request.getDueDate());
                 }
                 
+                if (request.getNotes() != null) {
+                    task.setNotes(request.getNotes());
+                }
+                
                 Task updatedTask = taskService.updateTask(task);
                 return ResponseEntity.ok(updatedTask);
             } else {
@@ -324,6 +332,10 @@ public class TaskController {
                 
                 if (request.getDueDate() != null) {
                     subTask.setDueDate(request.getDueDate());
+                }
+                
+                if (request.getNotes() != null) {
+                    subTask.setNotes(request.getNotes());
                 }
                 
                 Task createdSubTask = taskService.addSubTask(parentTask.get(), subTask);
@@ -582,6 +594,7 @@ public class TaskController {
         private TaskPriority priority;
         private LocalDateTime dueDate;
         private Long parentTaskId;
+        private String notes;
         
         // Getters and Setters
         public String getTitle() { return title; }
@@ -598,6 +611,9 @@ public class TaskController {
         
         public Long getParentTaskId() { return parentTaskId; }
         public void setParentTaskId(Long parentTaskId) { this.parentTaskId = parentTaskId; }
+        
+        public String getNotes() { return notes; }
+        public void setNotes(String notes) { this.notes = notes; }
     }
     
     public static class CreateTaskFromEmailRequest {
@@ -630,6 +646,7 @@ public class TaskController {
         private TaskStatus status;
         private TaskPriority priority;
         private LocalDateTime dueDate;
+        private String notes;
         
         // Getters and Setters
         public String getTitle() { return title; }
@@ -646,6 +663,9 @@ public class TaskController {
         
         public LocalDateTime getDueDate() { return dueDate; }
         public void setDueDate(LocalDateTime dueDate) { this.dueDate = dueDate; }
+        
+        public String getNotes() { return notes; }
+        public void setNotes(String notes) { this.notes = notes; }
     }
     
     // Bulk operation request DTOs

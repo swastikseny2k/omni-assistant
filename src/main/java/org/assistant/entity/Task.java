@@ -49,6 +49,9 @@ public class Task {
     @Column(name = "email_source_id")
     private String emailSourceId;
     
+    @Column(columnDefinition = "TEXT")
+    private String notes;
+    
     // Relationships
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
@@ -226,6 +229,14 @@ public class Task {
     
     public void setEmailSourceId(String emailSourceId) {
         this.emailSourceId = emailSourceId;
+    }
+    
+    public String getNotes() {
+        return notes;
+    }
+    
+    public void setNotes(String notes) {
+        this.notes = notes;
     }
     
     public User getOwner() {

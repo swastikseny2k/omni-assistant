@@ -659,5 +659,290 @@ main() {
     fi
 }
 
-# Run main function
-main "$@"
+# Cleanup function - removes everything installed by this script
+cleanup() {
+    echo "🧹 Kubernetes Cleanup Script"
+    echo "============================="
+    echo ""
+    
+    detect_os
+    
+    log_warning "⚠️  WARNING: This will remove ALL Kubernetes components!"
+    echo ""
+    echo "This will remove:"
+    echo "  - Kubernetes cluster and all deployments"
+    echo "  - kubectl, kubeadm, kubelet"
+    echo "  - Docker/containerd (optional)"
+    echo "  - Helm"
+    echo "  - All configuration files"
+    echo ""
+    
+    read -p "Are you sure you want to continue? Type 'YES' to confirm: " CONFIRM
+    
+    if [ "$CONFIRM" != "YES" ]; then
+        log_info "Cleanup cancelled"
+        exit 0
+    fi
+    
+    echo ""
+    log_info "Starting cleanup process..."
+    echo ""
+    
+    case $OS in
+        macos)
+            cleanup_macos
+            ;;
+        ubuntu|debian)
+            cleanup_ubuntu
+            ;;
+        centos|rhel|rocky|almalinux)
+            cleanup_rhel
+            ;;
+        *)
+            log_error "Unsupported OS for cleanup: $OS"
+            exit 1
+            ;;
+    esac
+    
+    log_success "Cleanup completed! 🎉"
+    echo ""
+    log_info "Note: You may need to reboot your system to complete the cleanup."
+}
+
+# Cleanup for macOS
+cleanup_macos() {
+    log_info "Cleaning up Kubernetes on macOS..."
+    
+    # Stop and delete minikube
+    if command -v minikube &> /dev/null; then
+        log_info "Stopping and deleting Minikube..."
+        minikube stop 2>/dev/null || true
+        minikube delete 2>/dev/null || true
+        
+        # Uninstall minikube
+        log_info "Uninstalling Minikube..."
+        brew uninstall minikube 2>/dev/null || true
+        log_success "Minikube removed"
+    fi
+    
+    # Remove kubectl
+    if command -v kubectl &> /dev/null; then
+        log_info "Uninstalling kubectl..."
+        brew uninstall kubectl 2>/dev/null || true
+        log_success "kubectl removed"
+    fi
+    
+    # Remove Helm
+    if command -v helm &> /dev/null; then
+        log_info "Uninstalling Helm..."
+        brew uninstall helm 2>/dev/null || true
+        log_success "Helm removed"
+    fi
+    
+    # Remove configuration files
+    log_info "Removing configuration files..."
+    rm -rf ~/.kube 2>/dev/null || true
+    rm -rf ~/.minikube 2>/dev/null || true
+    
+    # Ask about Docker
+    echo ""
+    read -p "Do you want to remove Docker Desktop as well? (y/n): " REMOVE_DOCKER
+    if [ "$REMOVE_DOCKER" = "y" ] || [ "$REMOVE_DOCKER" = "Y" ]; then
+        log_info "Uninstalling Docker Desktop..."
+        brew uninstall --cask docker 2>/dev/null || true
+        rm -rf ~/Library/Containers/com.docker.docker 2>/dev/null || true
+        rm -rf ~/Library/Application\ Support/Docker\ Desktop 2>/dev/null || true
+        log_success "Docker Desktop removed"
+    fi
+    
+    log_success "macOS cleanup completed"
+}
+
+# Cleanup for Ubuntu/Debian
+cleanup_ubuntu() {
+    log_info "Cleaning up Kubernetes on Ubuntu/Debian..."
+    
+    # Stop kubelet service
+    if systemctl is-active --quiet kubelet 2>/dev/null; then
+        log_info "Stopping kubelet service..."
+        sudo systemctl stop kubelet
+    fi
+    
+    # Reset kubeadm cluster
+    if command -v kubeadm &> /dev/null; then
+        log_info "Resetting Kubernetes cluster..."
+        sudo kubeadm reset -f 2>/dev/null || true
+        log_success "Cluster reset"
+    fi
+    
+    # Remove Kubernetes packages
+    log_info "Removing Kubernetes packages..."
+    sudo apt-mark unhold kubelet kubeadm kubectl 2>/dev/null || true
+    sudo apt-get purge -y kubeadm kubectl kubelet kubernetes-cni 2>/dev/null || true
+    sudo apt-get autoremove -y 2>/dev/null || true
+    log_success "Kubernetes packages removed"
+    
+    # Remove Helm
+    if command -v helm &> /dev/null; then
+        log_info "Removing Helm..."
+        sudo rm -f /usr/local/bin/helm 2>/dev/null || true
+        log_success "Helm removed"
+    fi
+    
+    # Remove configuration and data directories
+    log_info "Removing configuration files and data..."
+    sudo rm -rf ~/.kube 2>/dev/null || true
+    sudo rm -rf /etc/kubernetes 2>/dev/null || true
+    sudo rm -rf /var/lib/etcd 2>/dev/null || true
+    sudo rm -rf /var/lib/kubelet 2>/dev/null || true
+    sudo rm -rf /var/lib/cni 2>/dev/null || true
+    sudo rm -rf /etc/cni 2>/dev/null || true
+    sudo rm -rf /opt/cni 2>/dev/null || true
+    log_success "Configuration files removed"
+    
+    # Remove CNI plugins
+    log_info "Removing CNI plugins..."
+    sudo rm -rf /opt/cni/bin 2>/dev/null || true
+    
+    # Remove iptables rules
+    log_info "Cleaning up iptables rules..."
+    sudo iptables -F 2>/dev/null || true
+    sudo iptables -t nat -F 2>/dev/null || true
+    sudo iptables -t mangle -F 2>/dev/null || true
+    sudo iptables -X 2>/dev/null || true
+    
+    # Remove Kubernetes repository
+    log_info "Removing Kubernetes repository..."
+    sudo rm -f /etc/apt/sources.list.d/kubernetes.list 2>/dev/null || true
+    sudo rm -f /etc/apt/keyrings/kubernetes-apt-keyring.gpg 2>/dev/null || true
+    sudo apt-get update 2>/dev/null || true
+    
+    # Ask about Docker/containerd
+    echo ""
+    read -p "Do you want to remove Docker/containerd as well? (y/n): " REMOVE_DOCKER
+    if [ "$REMOVE_DOCKER" = "y" ] || [ "$REMOVE_DOCKER" = "Y" ]; then
+        log_info "Removing Docker and containerd..."
+        sudo systemctl stop docker 2>/dev/null || true
+        sudo systemctl stop containerd 2>/dev/null || true
+        
+        sudo apt-get purge -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin 2>/dev/null || true
+        sudo apt-get autoremove -y 2>/dev/null || true
+        
+        sudo rm -rf /var/lib/docker 2>/dev/null || true
+        sudo rm -rf /var/lib/containerd 2>/dev/null || true
+        sudo rm -rf /etc/docker 2>/dev/null || true
+        sudo rm -f /etc/apt/sources.list.d/docker.list 2>/dev/null || true
+        sudo rm -f /etc/apt/keyrings/docker.gpg 2>/dev/null || true
+        
+        # Remove user from docker group
+        sudo deluser $USER docker 2>/dev/null || true
+        
+        log_success "Docker and containerd removed"
+    fi
+    
+    log_success "Ubuntu/Debian cleanup completed"
+}
+
+# Cleanup for RHEL/CentOS
+cleanup_rhel() {
+    log_info "Cleaning up Kubernetes on RHEL/CentOS..."
+    
+    # Stop kubelet service
+    if systemctl is-active --quiet kubelet 2>/dev/null; then
+        log_info "Stopping kubelet service..."
+        sudo systemctl stop kubelet
+    fi
+    
+    # Reset kubeadm cluster
+    if command -v kubeadm &> /dev/null; then
+        log_info "Resetting Kubernetes cluster..."
+        sudo kubeadm reset -f 2>/dev/null || true
+        log_success "Cluster reset"
+    fi
+    
+    # Remove Kubernetes packages
+    log_info "Removing Kubernetes packages..."
+    sudo yum remove -y kubeadm kubectl kubelet kubernetes-cni 2>/dev/null || true
+    sudo yum autoremove -y 2>/dev/null || true
+    log_success "Kubernetes packages removed"
+    
+    # Remove Helm
+    if command -v helm &> /dev/null; then
+        log_info "Removing Helm..."
+        sudo rm -f /usr/local/bin/helm 2>/dev/null || true
+        log_success "Helm removed"
+    fi
+    
+    # Remove configuration and data directories
+    log_info "Removing configuration files and data..."
+    sudo rm -rf ~/.kube 2>/dev/null || true
+    sudo rm -rf /etc/kubernetes 2>/dev/null || true
+    sudo rm -rf /var/lib/etcd 2>/dev/null || true
+    sudo rm -rf /var/lib/kubelet 2>/dev/null || true
+    sudo rm -rf /var/lib/cni 2>/dev/null || true
+    sudo rm -rf /etc/cni 2>/dev/null || true
+    sudo rm -rf /opt/cni 2>/dev/null || true
+    log_success "Configuration files removed"
+    
+    # Remove iptables rules
+    log_info "Cleaning up iptables rules..."
+    sudo iptables -F 2>/dev/null || true
+    sudo iptables -t nat -F 2>/dev/null || true
+    sudo iptables -t mangle -F 2>/dev/null || true
+    sudo iptables -X 2>/dev/null || true
+    
+    # Remove Kubernetes repository
+    log_info "Removing Kubernetes repository..."
+    sudo rm -f /etc/yum.repos.d/kubernetes.repo 2>/dev/null || true
+    sudo yum clean all 2>/dev/null || true
+    
+    # Ask about Docker/containerd
+    echo ""
+    read -p "Do you want to remove Docker/containerd as well? (y/n): " REMOVE_DOCKER
+    if [ "$REMOVE_DOCKER" = "y" ] || [ "$REMOVE_DOCKER" = "Y" ]; then
+        log_info "Removing Docker and containerd..."
+        sudo systemctl stop docker 2>/dev/null || true
+        sudo systemctl stop containerd 2>/dev/null || true
+        
+        sudo yum remove -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin 2>/dev/null || true
+        sudo yum autoremove -y 2>/dev/null || true
+        
+        sudo rm -rf /var/lib/docker 2>/dev/null || true
+        sudo rm -rf /var/lib/containerd 2>/dev/null || true
+        sudo rm -rf /etc/docker 2>/dev/null || true
+        sudo rm -f /etc/yum.repos.d/docker-ce.repo 2>/dev/null || true
+        
+        # Remove user from docker group
+        sudo gpasswd -d $USER docker 2>/dev/null || true
+        
+        log_success "Docker and containerd removed"
+    fi
+    
+    log_success "RHEL/CentOS cleanup completed"
+}
+
+# Handle command line arguments
+case "${1:-}" in
+    "cleanup")
+        cleanup
+        ;;
+    "help")
+        echo "Usage: $0 [OPTION]"
+        echo ""
+        echo "Kubernetes Setup Script for Omni Assistant"
+        echo ""
+        echo "Options:"
+        echo "  (no option)       Install and setup Kubernetes"
+        echo "  cleanup           Remove all Kubernetes components"
+        echo "  help              Show this help message"
+        echo ""
+        echo "Supported platforms:"
+        echo "  - macOS (using Minikube)"
+        echo "  - Ubuntu/Debian"
+        echo "  - RHEL/CentOS/Rocky/AlmaLinux"
+        echo ""
+        ;;
+    *)
+        main
+        ;;
+esac
